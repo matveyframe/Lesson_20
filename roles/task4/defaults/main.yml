@@ -1,0 +1,13 @@
+auditd_dir: /etc/audit
+
+auditd_log_file: /var/log/audit/audit.log
+auditd_max_log_file: 8
+auditd_num_logs: 5
+auditd_space_left: 75
+auditd_space_left_action: SYSLOG
+auditd_admin_space_left: 50
+
+audit_rules:
+  - "-a always,exit -F arch=b64 -S open,openat -F success=1"
+  - "-w /etc/passwd -p wa -k identity"
+  - "-w /etc/sudoers -p wa -k scope"

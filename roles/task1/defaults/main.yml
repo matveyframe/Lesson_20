@@ -1,0 +1,9 @@
+visits_repo_url: "https://gitlab.com/devops201206/visits.git"
+
+visits_user: visits
+visits_group: visits
+visits_dir: /opt/visits
+visits_venv: /opt/visits/venv
+
+visits_db_host: 127.0.0.1
+visits_redis_host: 127.0.0.1

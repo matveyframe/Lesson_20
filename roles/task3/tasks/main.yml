@@ -1,0 +1,19 @@
+- name: know timezone
+  ansible.builtin.command: timedatectl show --property=Timezone --value
+  register: current_tz
+  changed_when: false
+
+- name: changed timezone
+  ansible.builtin.command: timedatectl set-timezone Europe/Minsk
+  when: current_tz.stdout != "Europe/Minsk"
+
+- name: install chrony
+  ansible.builtin.package:
+    name: chrony
+    state: present
+
+- name: ON chrony
+  ansible.builtin.service:
+    name: chrony
+    enabled: true
+    state: started

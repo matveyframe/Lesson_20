@@ -1,0 +1,15 @@
+[Unit]
+Description=Visits Flask application
+After=network-online.target postgresql.service redis-server.service
+
+[Service]
+Type=simple
+User={{ visits_user }}
+Group={{ visits_group }}
+WorkingDirectory={{ visits_dir }}
+EnvironmentFile=/etc/visits.env
+ExecStart={{ visits_venv }}/bin/python app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

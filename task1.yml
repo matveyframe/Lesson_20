@@ -1,0 +1,5 @@
+- name: Deploy visits application
+  hosts: all
+  become: true
+  roles:
+    - task1

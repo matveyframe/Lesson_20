@@ -1,0 +1,16 @@
+[Unit]
+Description=Node Exporter
+After=network-online.target
+
+[Service]
+Type=app
+User=root
+Group=root
+ExecStart={{ node_exporter_bin_dir }}/node_exporter
+
+Restart=always
+RestartSec=5
+
+
+[Install]
+WantedBy=multi-user.target

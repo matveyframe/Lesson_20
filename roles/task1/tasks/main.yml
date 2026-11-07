@@ -1,0 +1,149 @@
+- name: install Postgresql
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - python3-psycopg2
+      - acl
+    state: latest
+    update_cache: true
+
+
+- name: start postgresql
+  ansible.builtin.service:
+    name: postgresql
+    enabled: true
+    state: started
+
+
+- name: create db user
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ visits_db_user }}"
+    password: "{{ visits_db_password }}"
+
+
+- name: create database
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ visits_db_name }}"
+    owner: "{{ visits_db_user }}"
+
+
+- name: create table visits
+  become_user: postgres
+  community.postgresql.postgresql_query:
+    db: "{{ visits_db_name }}"
+    query: "CREATE TABLE IF NOT EXISTS visits (id SERIAL PRIMARY KEY);"
+- name: give table to app user
+  become_user: postgres
+  community.postgresql.postgresql_owner:
+    db: "{{ visits_db_name }}"
+    new_owner: "{{ visits_db_user }}"
+    obj_name: visits
+    obj_type: table
+
+
+- name: give table to app user
+  become_user: postgres
+  community.postgresql.postgresql_owner:
+    db: "{{ visits_db_name }}"
+    new_owner: "{{ visits_db_user }}"
+    obj_name: visits
+    obj_type: table
+
+
+
+- name: install redis
+  ansible.builtin.apt:
+    name: redis-server
+    state: latest
+    update_cache: true
+
+
+- name: start redis
+  ansible.builtin.service:
+    name: redis-server
+    enabled: true
+    state: started
+
+
+- name: install packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - python3-venv
+      - python3-pip
+      - python3-dev
+      - libpq-dev
+      - gcc
+    state: latest
+    update_cache: true
+
+
+- name: create group
+  ansible.builtin.group:
+    name: "{{ visits_group }}"
+    system: true
+
+
+- name: create user
+  ansible.builtin.user:
+    name: "{{ visits_user }}"
+    group: "{{ visits_group }}"
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
+
+- name: clone application
+  ansible.builtin.git:
+    repo: "{{ visits_repo_url }}"
+    dest: "{{ visits_dir }}"
+  notify: Restart visits
+
+
+- name: set owner of app directory
+  ansible.builtin.file:
+    path: "{{ visits_dir }}"
+    state: directory
+    owner: "{{ visits_user }}"
+    group: "{{ visits_group }}"
+    recurse: true
+
+
+- name: install python dependencies
+  ansible.builtin.pip:
+    name:
+      - flask
+      - psycopg2
+      - redis
+    virtualenv: "{{ visits_venv }}"
+    virtualenv_command: python3 -m venv
+  notify: Restart visits
+
+- name: install env file
+  ansible.builtin.template:
+    src: visits.env.j2
+    dest: /etc/visits.env
+    owner: root
+    group: "{{ visits_group }}"
+    mode: "0640"
+  notify: Restart visits
+
+- name: install systemd unit
+  ansible.builtin.template:
+    src: visits.service.j2
+    dest: /etc/systemd/system/visits.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart visits
+
+- name: start visits
+  ansible.builtin.systemd:
+    name: visits
+    enabled: true
+    state: started
+    daemon_reload: true

@@ -1,0 +1,8 @@
+- name: install node_exporter
+  hosts: all
+  become: true
+  roles:
+    - role: task2
+      vars:
+          node_exporter_version: "1.12.1.linux-amd64"
+          node_exporter_listen_port: "0.0.0.0:9100"
